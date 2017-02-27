@@ -34,18 +34,17 @@ class TransactionRepository implements RepositoryInterface
 
     public function loadFromFile($filename)
     {
-        if (!file_exists($filename)) {
-            die("File not found");
-        }
+        if (file_exists($filename)) {
 
-        $contents = file_get_contents($filename);
-        $contents = explode("\r\n", $contents);
+            $contents = file_get_contents($filename);
+            $contents = explode("\r\n", $contents);
 
-        foreach ($contents as $content) {
-            if ($content != "") {
-                $content              = explode(',', $content);
-                $transaction          = new Transaction($content[0], $content[1], $content[2], $content[3], $content[4], $content[5]);
-                $this->transactions[] = $transaction;
+            foreach ($contents as $content) {
+                if ($content != "") {
+                    $content              = explode(',', $content);
+                    $transaction          = new Transaction($content[0], $content[1], $content[2], $content[3], $content[4], $content[5]);
+                    $this->transactions[] = $transaction;
+                }
             }
         }
     }
