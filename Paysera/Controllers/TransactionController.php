@@ -50,7 +50,7 @@ class TransactionController
     private function cashInCommission(Transaction $transaction)
     {
         $commission     = $transaction->transactionAmount * $this->config['inputCommissionPercent'];
-        $convertedLimit = $this->convertCurrencyFromEUR($transaction, $this->config['inputCommissionLimitMax']);
+        $convertedLimit = $this->convertCurrency($transaction, $this->config['inputCommissionLimitMax']);
         if ($commission > $convertedLimit) {
             printf("%0.2f\n", $convertedLimit);
         } else {
@@ -73,7 +73,7 @@ class TransactionController
                         break;
                     }
                     $transactionsPerWeek++;
-                    $transactionsPerWeekAmount += $this->convertCurrencyToEUR($userTransaction);
+                    $transactionsPerWeekAmount += $this->convertCurrency($userTransaction);
                 }
             }
             if ($transactionsPerWeek >= $this->config['outputCommissionNormalFreeTransactions']) {
@@ -81,14 +81,14 @@ class TransactionController
                 printf("%0.2f\n", $commission);
             } else {
 
-                $commission = max($this->convertCurrencyToEUR($transaction) + $transactionsPerWeekAmount
+                $commission = max($this->convertCurrency($transaction) + $transactionsPerWeekAmount
                         - $this->config['outputCommissionNormalDiscount'], 0)
                     * $this->config['outputCommissionPercentNormal'];
-                printf("%0.2f\n", $this->convertCurrencyFromEUR($transaction,$commission));
+                printf("%0.2f\n", $this->convertCurrency($transaction, $commission));
             }
         } else {
             $commission     = $transaction->transactionAmount * $this->config['outputCommissionPercentLegal'];
-            $convertedLimit = $this->convertCurrencyFromEUR($transaction, $this->config['outputCommissionLegalLimitMin']);
+            $convertedLimit = $this->convertCurrency($transaction, $this->config['outputCommissionLegalLimitMin']);
             if ($commission < $convertedLimit) {
                 printf("%0.2f\n", $convertedLimit);
             } else {
@@ -97,21 +97,14 @@ class TransactionController
         }
     }
 
-    private function convertCurrencyToEUR(Transaction $transaction)
+    private function convertCurrency(Transaction $transaction, $amount = 0)
     {
         if (array_key_exists($transaction->currency, $this->config['currencyConversion'])) {
-            $converted = $transaction->transactionAmount / $this->config['currencyConversion'][$transaction->currency];
-            $fig       = pow(10, $this->config['commissionPrecision']);
-            $converted = ceil($converted * $fig) / $fig;
-            return $converted;
-        }
-        return false;
-    }
-
-    private function convertCurrencyFromEUR(Transaction $transaction, $amount)
-    {
-        if (array_key_exists($transaction->currency, $this->config['currencyConversion'])) {
-            $converted = $amount * $this->config['currencyConversion'][$transaction->currency];
+            if ($amount == 0) {
+                $converted = $transaction->transactionAmount / $this->config['currencyConversion'][$transaction->currency];
+            } else {
+                $converted = $amount * $this->config['currencyConversion'][$transaction->currency];
+            }
             $fig       = pow(10, $this->config['commissionPrecision']);
             $converted = ceil($converted * $fig) / $fig;
             return $converted;
