@@ -10,4 +10,6 @@ interface RepositoryInterface
     public function getByUserId($id);
 
     public function loadFromFile($filename);
+
+    public function add(Transaction $transaction);
 }

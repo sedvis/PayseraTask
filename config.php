@@ -11,9 +11,10 @@ return [
 
     'outputCommissionLegalLimitMin' => 0.5,
 
-    'outputCommissionNormal' => 0.3,
+    'outputCommissionNormalFreeTransactions' => 3,
+    'outputCommissionNormalDiscount' => 1000,
 
-    'commissionRounding' => 0.01,
+    'commissionPrecision' => 2,
 
     'currencyConversion' => [
         'EUR' => 1,

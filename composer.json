@@ -3,5 +3,8 @@
     "psr-4": {
       "Paysera\\": "Paysera"
     }
+  },
+  "require": {
+    "phpunit/phpunit": "^5.7"
   }
 }
