@@ -84,11 +84,15 @@ class TransactionController
                 $commission = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentNormal'];
                 return $commission;
             } else {
-                $commission = max($this->convertCurrency($transaction) + $transactionsPerWeekAmount
-                        - $this->config['outputCommissionNormalDiscount'], 0)
-                    * $this->config['outputCommissionPercentNormal'];
+                if ($transactionsPerWeekAmount > $this->config['outputCommissionNormalDiscount']) {
+                    $commission = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentNormal'];
+                    return $commission;
+                } else {
+                    $amount     = max($this->convertCurrency($transaction) + $transactionsPerWeekAmount - $this->config['outputCommissionNormalDiscount'],0);
+                    $commission = $amount * $this->config['outputCommissionPercentNormal'];
+                    return $this->convertCurrency($transaction, $commission);
+                }
 
-                return $this->convertCurrency($transaction, $commission);
             }
         } else {
             $commission     = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentLegal'];
