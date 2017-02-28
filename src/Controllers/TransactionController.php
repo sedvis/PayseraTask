@@ -60,6 +60,11 @@ class TransactionController
         }
     }
 
+    /**
+     * Cash Out commission calculation for natural and legal users
+     * @param Transaction $transaction
+     * @return float|int
+     */
     private function cashOutCommission(Transaction $transaction)
     {
         if ($transaction->getUserType() == 'natural') {
@@ -80,6 +85,7 @@ class TransactionController
                     $transactionsPerWeekAmount += $this->convertCurrency($userTransaction);
                 }
             }
+            /** Natural user's discount for cashout calculation */
             if ($transactionsPerWeek >= $this->config['outputCommissionNormalFreeTransactions']) {
                 $commission = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentNormal'];
                 return $commission;
@@ -88,7 +94,7 @@ class TransactionController
                     $commission = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentNormal'];
                     return $commission;
                 } else {
-                    $amount     = max($this->convertCurrency($transaction) + $transactionsPerWeekAmount - $this->config['outputCommissionNormalDiscount'],0);
+                    $amount     = max($this->convertCurrency($transaction) + $transactionsPerWeekAmount - $this->config['outputCommissionNormalDiscount'], 0);
                     $commission = $amount * $this->config['outputCommissionPercentNormal'];
                     return $this->convertCurrency($transaction, $commission);
                 }
@@ -105,10 +111,17 @@ class TransactionController
         }
     }
 
+    /**
+     * Converts transaction amount to EUR if $amount = -1
+     * Converts $amount to transaction's currency  if $amount >= 0
+     * @param Transaction $transaction
+     * @param int $amount
+     * @return bool|float|int
+     */
     private function convertCurrency(Transaction $transaction, $amount = -1)
     {
         if (array_key_exists($transaction->getCurrency(), $this->config['currencyConversion'])) {
-            if ($amount == -1) {
+            if ($amount < 0) {
                 $converted = $transaction->getTransactionAmount() / $this->config['currencyConversion'][$transaction->getCurrency()];
             } else {
                 $converted = $amount * $this->config['currencyConversion'][$transaction->getCurrency()];
@@ -117,7 +130,6 @@ class TransactionController
             $converted = ceil($converted * $fig) / $fig;
             return $converted;
         }
-
         return false;
     }
 
