@@ -52,9 +52,9 @@ class TransactionController
         $commission     = $transaction->transactionAmount * $this->config['inputCommissionPercent'];
         $convertedLimit = $this->convertCurrency($transaction, $this->config['inputCommissionLimitMax']);
         if ($commission > $convertedLimit) {
-            printf("%0.2f\n", $convertedLimit);
+            $this->printCommission($convertedLimit);
         } else {
-            printf("%0.2f\n", $commission);
+            $this->printCommission($commission);
         }
     }
 
@@ -78,29 +78,29 @@ class TransactionController
             }
             if ($transactionsPerWeek >= $this->config['outputCommissionNormalFreeTransactions']) {
                 $commission = $transaction->transactionAmount * $this->config['outputCommissionPercentNormal'];
-                printf("%0.2f\n", $commission);
+                $this->printCommission($commission);
             } else {
 
                 $commission = max($this->convertCurrency($transaction) + $transactionsPerWeekAmount
                         - $this->config['outputCommissionNormalDiscount'], 0)
                     * $this->config['outputCommissionPercentNormal'];
-                printf("%0.2f\n", $this->convertCurrency($transaction, $commission));
+                $this->printCommission($this->convertCurrency($transaction, $commission));
             }
         } else {
             $commission     = $transaction->transactionAmount * $this->config['outputCommissionPercentLegal'];
             $convertedLimit = $this->convertCurrency($transaction, $this->config['outputCommissionLegalLimitMin']);
             if ($commission < $convertedLimit) {
-                printf("%0.2f\n", $convertedLimit);
+                $this->printCommission($convertedLimit);
             } else {
-                printf("%0.2f\n", $commission);
+                $this->printCommission($commission);
             }
         }
     }
 
-    private function convertCurrency(Transaction $transaction, $amount = 0)
+    private function convertCurrency(Transaction $transaction, $amount = -1)
     {
         if (array_key_exists($transaction->currency, $this->config['currencyConversion'])) {
-            if ($amount == 0) {
+            if ($amount == -1) {
                 $converted = $transaction->transactionAmount / $this->config['currencyConversion'][$transaction->currency];
             } else {
                 $converted = $amount * $this->config['currencyConversion'][$transaction->currency];
@@ -112,4 +112,8 @@ class TransactionController
         return false;
     }
 
+    private function printCommission($commission)
+    {
+        fwrite(STDOUT, sprintf("%0.2f\n", $commission));
+    }
 }
