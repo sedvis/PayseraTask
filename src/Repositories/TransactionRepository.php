@@ -21,12 +21,16 @@ class TransactionRepository implements RepositoryInterface
         return $this->transactions;
     }
 
-    public function getByUserId($id)
+    public function getByField($field, $value)
     {
         $userTransactions = [];
         foreach ($this->transactions as $transaction) {
-            if ($transaction->userId == $id) {
-                $userTransactions[] = $transaction;
+            $method = 'get' . ucfirst($field);
+
+            if (method_exists($transaction, $method)) {
+                if ($transaction->$method() == $value) {
+                    $userTransactions[] = $transaction;
+                }
             }
         }
         return $userTransactions;
@@ -41,8 +45,14 @@ class TransactionRepository implements RepositoryInterface
 
             foreach ($contents as $content) {
                 if ($content != "") {
-                    $content              = explode(',', $content);
-                    $transaction          = new Transaction($content[0], $content[1], $content[2], $content[3], $content[4], $content[5]);
+                    $content     = explode(',', $content);
+                    $transaction = new Transaction();
+                    $transaction->setDate($content[0]);
+                    $transaction->setUserId($content[1]);
+                    $transaction->setUserType($content[2]);
+                    $transaction->setTransactionType($content[3]);
+                    $transaction->setTransactionAmount($content[4]);
+                    $transaction->setCurrency($content[5]);
                     $this->transactions[] = $transaction;
                 }
             }

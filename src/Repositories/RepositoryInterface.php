@@ -7,7 +7,7 @@ interface RepositoryInterface
 {
     public function getAll();
 
-    public function getByUserId($id);
+    public function getByField($field, $value);
 
     public function loadFromFile($filename);
 

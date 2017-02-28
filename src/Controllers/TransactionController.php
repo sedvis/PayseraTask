@@ -1,28 +1,29 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Sedvis
- * Date: 2/27/2017
- * Time: 20:47
- */
 
 namespace Paysera\Controllers;
-
 
 use Paysera\Models\Transaction;
 use Paysera\Repositories\RepositoryInterface;
 
 class TransactionController
 {
+    /**
+     * @var RepositoryInterface
+     */
     protected $transactionRepository;
+
+    /**
+     * @var array
+     */
     protected $config;
 
     /**
      * TransactionController constructor.
-     * @param $repository
-     * @param $config
+     *
+     * @param RepositoryInterface $repository
+     * @param array $config
      */
-    public function __construct(RepositoryInterface $repository, $config)
+    public function __construct(RepositoryInterface $repository, array $config)
     {
         $this->transactionRepository = $repository;
         $this->config                = $config;
@@ -36,10 +37,10 @@ class TransactionController
         $this->countCommissions($transactions);
     }
 
-    public function countCommissions($transactions)
+    private function countCommissions(array $transactions)
     {
         foreach ($transactions as $transaction) {
-            if ($transaction->transactionType == 'cash_in') {
+            if ($transaction->getTransactionType() == Transaction::CASH_IN) {
                 $this->cashInCommission($transaction);
             } else {
                 $this->cashOutCommission($transaction);
@@ -49,7 +50,7 @@ class TransactionController
 
     private function cashInCommission(Transaction $transaction)
     {
-        $commission     = $transaction->transactionAmount * $this->config['inputCommissionPercent'];
+        $commission     = $transaction->getTransactionAmount() * $this->config['inputCommissionPercent'];
         $convertedLimit = $this->convertCurrency($transaction, $this->config['inputCommissionLimitMax']);
         if ($commission > $convertedLimit) {
             $this->printCommission($convertedLimit);
@@ -60,16 +61,18 @@ class TransactionController
 
     private function cashOutCommission(Transaction $transaction)
     {
-        if ($transaction->userType == 'natural') {
-            $date                      = new \DateTime($transaction->date);
+        if ($transaction->getUserType() == 'natural') {
+            $date                      = new \DateTime($transaction->getDate());
             $week                      = $date->format('W');
-            $userTransactions          = $this->transactionRepository->getByUserId($transaction->userId);
+            $userTransactions          = $this->transactionRepository->getByField('userId', $transaction->getUserId());
             $transactionsPerWeek       = 0;
             $transactionsPerWeekAmount = 0;
+
+            /** @var Transaction $userTransaction */
             foreach ($userTransactions as $userTransaction) {
-                $currentDate = new \DateTime($userTransaction->date);
-                if ($week == $currentDate->format('W') && $userTransaction->transactionType == "cash_out") {
-                    if ($userTransaction->id == $transaction->id) {
+                $currentDate = new \DateTime($userTransaction->getDate());
+                if ($week == $currentDate->format('W') && $userTransaction->getTransactionType() == Transaction::CASH_OUT) {
+                    if ($userTransaction->getId() == $transaction->getId()) {
                         break;
                     }
                     $transactionsPerWeek++;
@@ -77,17 +80,16 @@ class TransactionController
                 }
             }
             if ($transactionsPerWeek >= $this->config['outputCommissionNormalFreeTransactions']) {
-                $commission = $transaction->transactionAmount * $this->config['outputCommissionPercentNormal'];
+                $commission = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentNormal'];
                 $this->printCommission($commission);
             } else {
-
                 $commission = max($this->convertCurrency($transaction) + $transactionsPerWeekAmount
                         - $this->config['outputCommissionNormalDiscount'], 0)
                     * $this->config['outputCommissionPercentNormal'];
                 $this->printCommission($this->convertCurrency($transaction, $commission));
             }
         } else {
-            $commission     = $transaction->transactionAmount * $this->config['outputCommissionPercentLegal'];
+            $commission     = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentLegal'];
             $convertedLimit = $this->convertCurrency($transaction, $this->config['outputCommissionLegalLimitMin']);
             if ($commission < $convertedLimit) {
                 $this->printCommission($convertedLimit);
@@ -99,16 +101,17 @@ class TransactionController
 
     private function convertCurrency(Transaction $transaction, $amount = -1)
     {
-        if (array_key_exists($transaction->currency, $this->config['currencyConversion'])) {
+        if (array_key_exists($transaction->getCurrency(), $this->config['currencyConversion'])) {
             if ($amount == -1) {
-                $converted = $transaction->transactionAmount / $this->config['currencyConversion'][$transaction->currency];
+                $converted = $transaction->getTransactionAmount() / $this->config['currencyConversion'][$transaction->getCurrency()];
             } else {
-                $converted = $amount * $this->config['currencyConversion'][$transaction->currency];
+                $converted = $amount * $this->config['currencyConversion'][$transaction->getCurrency()];
             }
             $fig       = pow(10, $this->config['commissionPrecision']);
             $converted = ceil($converted * $fig) / $fig;
             return $converted;
         }
+
         return false;
     }
 
