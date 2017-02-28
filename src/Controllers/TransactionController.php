@@ -116,21 +116,18 @@ class TransactionController
      * Converts $amount to transaction's currency  if $amount >= 0
      * @param Transaction $transaction
      * @param int $amount
-     * @return bool|float|int
+     * @return float|int
      */
     private function convertCurrency(Transaction $transaction, $amount = -1)
     {
-        if (array_key_exists($transaction->getCurrency(), $this->config['currencyConversion'])) {
-            if ($amount < 0) {
-                $converted = $transaction->getTransactionAmount() / $this->config['currencyConversion'][$transaction->getCurrency()];
-            } else {
-                $converted = $amount * $this->config['currencyConversion'][$transaction->getCurrency()];
-            }
-            $fig       = pow(10, $this->config['commissionPrecision']);
-            $converted = ceil($converted * $fig) / $fig;
-            return $converted;
+        if ($amount < 0) {
+            $converted = $transaction->getTransactionAmount() / $this->config['currencyConversion'][$transaction->getCurrency()];
+        } else {
+            $converted = $amount * $this->config['currencyConversion'][$transaction->getCurrency()];
         }
-        return false;
+        $fig       = pow(10, $this->config['commissionPrecision']);
+        $converted = ceil($converted * $fig) / $fig;
+        return $converted;
     }
 
     private function printCommission($commission)

@@ -20,7 +20,6 @@ class TransactionControllerTest extends \PHPUnit_Framework_TestCase
 
     /**
      * TransactionControllerTest constructor.
-     * @param mixed $config
      */
     public function __construct()
     {
