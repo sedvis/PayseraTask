@@ -41,10 +41,11 @@ class TransactionController
     {
         foreach ($transactions as $transaction) {
             if ($transaction->getTransactionType() == Transaction::CASH_IN) {
-                $this->cashInCommission($transaction);
+                $commission = $this->cashInCommission($transaction);
             } else {
-                $this->cashOutCommission($transaction);
+                $commission = $this->cashOutCommission($transaction);
             }
+            $this->printCommission($commission);
         }
     }
 
@@ -53,9 +54,9 @@ class TransactionController
         $commission     = $transaction->getTransactionAmount() * $this->config['inputCommissionPercent'];
         $convertedLimit = $this->convertCurrency($transaction, $this->config['inputCommissionLimitMax']);
         if ($commission > $convertedLimit) {
-            $this->printCommission($convertedLimit);
+            return $convertedLimit;
         } else {
-            $this->printCommission($commission);
+            return $commission;
         }
     }
 
@@ -81,20 +82,21 @@ class TransactionController
             }
             if ($transactionsPerWeek >= $this->config['outputCommissionNormalFreeTransactions']) {
                 $commission = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentNormal'];
-                $this->printCommission($commission);
+                return $commission;
             } else {
                 $commission = max($this->convertCurrency($transaction) + $transactionsPerWeekAmount
                         - $this->config['outputCommissionNormalDiscount'], 0)
                     * $this->config['outputCommissionPercentNormal'];
-                $this->printCommission($this->convertCurrency($transaction, $commission));
+
+                return $this->convertCurrency($transaction, $commission);
             }
         } else {
             $commission     = $transaction->getTransactionAmount() * $this->config['outputCommissionPercentLegal'];
             $convertedLimit = $this->convertCurrency($transaction, $this->config['outputCommissionLegalLimitMin']);
             if ($commission < $convertedLimit) {
-                $this->printCommission($convertedLimit);
+                return $convertedLimit;
             } else {
-                $this->printCommission($commission);
+                return $commission;
             }
         }
     }
