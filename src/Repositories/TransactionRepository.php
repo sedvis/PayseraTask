@@ -41,7 +41,8 @@ class TransactionRepository implements RepositoryInterface
         if (file_exists($filename)) {
 
             $contents = file_get_contents($filename);
-            $contents = explode("\r\n", $contents);
+            $contents= str_replace("\r\n","\n",$contents);
+            $contents = explode("\n", $contents);
 
             foreach ($contents as $content) {
                 if ($content != "") {

@@ -121,9 +121,9 @@ class TransactionController
     private function convertCurrency(Transaction $transaction, $amount = -1)
     {
         if ($amount < 0) {
-            $converted = $transaction->getTransactionAmount() / $this->config['currencyConversion']["{$transaction->getCurrency()}"];
+            $converted = $transaction->getTransactionAmount() / $this->config['currencyConversion'][$transaction->getCurrency()];
         } else {
-            $converted = $amount * $this->config['currencyConversion']["{$transaction->getCurrency()}"];
+            $converted = $amount * $this->config['currencyConversion'][$transaction->getCurrency()];
         }
         $fig       = pow(10, $this->config['commissionPrecision']);
         $converted = ceil($converted * $fig) / $fig;
